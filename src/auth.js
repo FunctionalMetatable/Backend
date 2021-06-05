@@ -1,4 +1,4 @@
-const Database = require("@replit/database")
+const Database = require("@replit/database") // << CHANGE THIS IF YOU'RE USING MONGO TO "./Database.js"
 const fetch = require("node-fetch")
 const crypto = require("crypto")
 
