@@ -10,7 +10,7 @@ Tutorials.get = async function(id) {
     var tutorial = {}
 
     try {
-        tutorial = tutorials.findOne({id: { $regex: new RegExp(regex)}})
+        tutorial = await tutorials.findOne({id: { $regex: new RegExp(regex)}})
     } catch(ex) {
         tutorial = null
     }
