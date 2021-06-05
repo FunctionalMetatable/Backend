@@ -65,6 +65,26 @@ class Database {
       await collection.insert({ __internalKey: escapeRegExp(base.join('')), obj: value })
     }
   }
+  async list(prefix) {
+    var collection = null;
+    let base = key.split("-");
+    
+    if (base.length < 2) {
+      if (!this.collections.main) {
+        this.collections.main = this.db.get('main')
+      }
+      
+      collection = this.collections.main
+    } else {
+      if (!this.collections[base[0]]) {
+        this.collections[base[0]] = this.db.get(base[0])
+      }
+      collection = this.collections[base[0]]
+      base.shift();
+    }
+    
+    return collection.list()
+  }
   collections = {}
 }
 
