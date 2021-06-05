@@ -19,7 +19,7 @@ const app = express();
 app.use(cookieParser())
 
 app.get("/", (req, res) => {
-  res.send({ uptime: ((new Date()).getTime() - start ) / 1000});
+  res.json({ uptime: ((new Date()).getTime() - start ) / 1000});
 });
 
 app.get("/auth/begin", (req, res) => {
@@ -32,7 +32,6 @@ app.get("/auth/begin", (req, res) => {
 
 app.get("/auth/handle", async (req, res) => {
   // the user is back from hampton's thing.
-  console.log(req.get('Host'))
   const privateCode = req.query.privateCode;
 
   let authResponse = await fetch(
@@ -75,7 +74,7 @@ app.get('/users/:user', async (req, res) => {
 })
 
 app.put('/tutorial/new', auth.authMiddleware, async (req, res) => {
-  let tutorial = Tutorials.new(req.body, req.user)
+  let tutorial = await Tutorials.new(req.body, req.user)
 
   res.json(tutorial)
 })
