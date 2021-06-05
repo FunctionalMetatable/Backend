@@ -3,19 +3,18 @@ const express = require("express");
 const fetch = require("node-fetch");
 const cookieParser = require('cookie-parser')
 const auth = require('./auth.js')
-const Database = require("@replit/database") // << CHANGE THIS IF YOU'RE USING MONGO TO "./Database.js"
+const Tutorials = require('./Tutorials.js')
 const start = (new Date()).getTime()
 
 /* >>>>> SETTINGS <<<<< */
 
 const port = 3000;
-const frontendURL = "448me.sse.codesandbox.io";
-const backendURL = "hly3v.sse.codesandbox.io";
+const frontendURL = "localhost:3000";
+const backendURL = "localhost:3000";
 
 
 
 const app = express();
-const db = new Database()
 
 app.use(cookieParser())
 
@@ -33,6 +32,7 @@ app.get("/auth/begin", (req, res) => {
 
 app.get("/auth/handle", async (req, res) => {
   // the user is back from hampton's thing.
+  console.log(req.get('Host'))
   const privateCode = req.query.privateCode;
 
   let authResponse = await fetch(
@@ -61,46 +61,27 @@ app.get('/auth/me', auth.authMiddleware, async (req, res) => {
   res.json(req.user)
 })
 
-app.put('/auth/delete', auth.authMiddleware, async (req, res) => {
+app.get('/auth/delete', auth.authMiddleware, async (req, res) => {
   await auth.deleteSession(req.cookies.token)
+
+  res.clearCookie('token', { path: '/' })
   res.status(200).json({ ok: 'logged out' })
 })
 
 app.get('/users/:user', async (req, res) => {
-  let user = await auth.getUser(req.params.user)
+  let user = await auth.getUser(req.params.user.replace('*', '$1'))
   
-  user ? res.json(user) : res.status(404).json({ error: 'tutorial not found'})
+  user ? res.json(user) : res.status(404).json({ error: 'user not found'})
 })
 
 app.put('/tutorial/new', auth.authMiddleware, async (req, res) => {
-  let matches = await db.list('tutorial-')
-
-  let id = matches.length + 1;
-
-  let Tutorial = {
-    id,
-    body: req.body.body,
-    author: req.user,
-    tags: [],
-    history: {
-      created: {
-        time: Date.now(),
-        user: req.user
-      },
-      edited: {
-        time: Date.now(),
-        user: req.user
-      }
-    }
-  }
-
-  await db.set(`tutorial-${id}`, Tutorial)
+  let tutorial = Tutorials.new(req.body, req.user)
 
   res.json(tutorial)
 })
 
 app.get('/tutorial/:id', async (req, res) => {
-  let tutorial = await db.get(`tutorial-${req.params.id}`)
+  let tutorial = await Tutorials.get(req.params.id)
   tutorial ? res.json(tutorial) : res.status(404).json({ error: 'tutorial not found'})
 })
 
