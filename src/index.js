@@ -9,8 +9,8 @@ const start = (new Date()).getTime()
 /* >>>>> SETTINGS <<<<< */
 
 const port = 3000;
-const frontendURL = "localhost:3000";
-const backendURL = "localhost:3000";
+const frontendURL = process.env.FRONTEND_URL || "448me.sse.codesandbox.io"
+const backendURL = process.env.BACKEND_URL || "hly3v.sse.codesandbox.io"
 
 
 
