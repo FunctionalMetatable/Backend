@@ -22,7 +22,7 @@ Tutorials.new = async function(body, author) {
     let allTutorials = await tutorials.list()
     let tutorial = {
         id: (allTutorials.length + 1).toString(),
-        author: author,
+        author,
         tags: [],
         body,
         history: {
