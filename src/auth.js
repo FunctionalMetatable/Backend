@@ -1,8 +1,11 @@
-const Database = require("@replit/database") // << CHANGE THIS IF YOU'RE USING MONGO TO "./Database.js"
 const fetch = require("node-fetch")
 const crypto = require("crypto")
 
-const db = new Database()
+const db = require('monk')('localhost/flagclicked')
+const users = db.get('users')
+const sessions = db.get('sessions')
+
+users.createIndex('name', { unique: true })
 const Auth = {}
 
 Auth.createUser = async function(username) {
@@ -25,54 +28,48 @@ Auth.createUser = async function(username) {
     admin: false
   }
 
-  await db.set(`currentUsers`, sysId)
 
-  await db.set(`user-${User.username.toLowerCase()}`, User)
+  await users.insert(User)
 
 
   return User
 }
 
 Auth.getUser = async function(name) {
-  let user = await db.get(`user-${name.toLowerCase()}`)
-
+  console.log(name)
+  let user = await users.findOne({
+    username: { $regex: new RegExp(`^${escapeRegExp(name)}$`, 'i') }
+  })
+  console.dir(user)
   return user ? user : null
 }
 
-Auth.createSession = async function(user, tries = 0) {
-  let session = crypto.randomBytes(256).toString('hex');
+Auth.createSession = async function(user) {
+  let sessionToken = await generateToken()
 
-  let old = await db.get(`session-${session}`);
+  await sessions.insert({ user, session: sessionToken })
 
-  if (tries > 10) throw 'Max tries reached'
-  if (old) return await Auth.createSession(user, tries + 1)
 
-  await db.set(`session-${session}`, user.toLowerCase())
-
-  return session
+  return sessionToken
 }
 
 Auth.getSession = async function(sessionToken) {
-  let sessionUser = await db.get(`session-${sessionToken}`)
+  let sessionUser = await sessions.findOne({
+    session: { $regex: new RegExp(`^${escapeRegExp(sessionToken)}$`, 'i')}
+  })
 
   if (sessionUser) {
-    return await Auth.getUser(sessionUser)
+    return await Auth.getUser(sessionUser.user)
   } else return null
 }
 
 Auth.deleteSession = async function(sessionToken) {
-  let sessionUser = await db.get(`session-${sessionToken}`)
-
-  if (!!sessionUser) {
-    await db.delete(`session-${sessionToken}`)
-    return true
-  } else {
-    return false
-  }
+  await sessions.remove({ session: sessionToken })
+  return true
 }
 
 Auth.getCurrentUserCount = async function() {
-  return Number(await db.get("currentUsers") || "0")
+  return (await users.find()).length
 }
 
 Auth.authMiddleware = async function(req, res, next) {
@@ -86,5 +83,29 @@ Auth.authMiddleware = async function(req, res, next) {
     next()
   }
 }
+
+
+
+function escapeRegExp(string) {
+  if (!string) return undefined
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+
+async function generateToken() {
+  let buffer = await new Promise((resolve, reject) => {
+    crypto.randomBytes(256, (ex, buffer) => {
+      if (ex) return reject('error generating token')
+      resolve(buffer)
+    })
+  })
+
+  let token = crypto
+      .createHash('sha1')
+      .update(buffer)
+      .digest('hex')
+
+  return token
+}
+
 
 module.exports = Auth
