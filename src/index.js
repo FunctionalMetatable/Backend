@@ -3,6 +3,7 @@ const express = require("express");
 const fetch = require("node-fetch");
 const cookieParser = require('cookie-parser')
 const auth = require('./auth.js')
+const Database = require("@replit/database") // << CHANGE THIS IF YOU'RE USING MONGO TO "./Database.js"
 const start = (new Date()).getTime()
 
 /* >>>>> SETTINGS <<<<< */
@@ -14,6 +15,7 @@ const backendURL = "hly3v.sse.codesandbox.io";
 
 
 const app = express();
+const db = new Database()
 
 app.use(cookieParser())
 
