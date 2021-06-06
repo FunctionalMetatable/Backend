@@ -56,11 +56,11 @@ app.get("/auth/handle", async (req, res) => {
   }
 });
 
-app.get('/auth/me', auth.authMiddleware, async (req, res) => {
+app.get('/auth/me', auth.middleware('authenticated'), (req, res) => {
   res.json(req.user)
 })
 
-app.get('/auth/delete', auth.authMiddleware, async (req, res) => {
+app.get('/auth/delete', auth.middleware('authenticated'), async (req, res) => {
   await auth.deleteSession(req.cookies.token)
 
   res.clearCookie('token', { path: '/' })
@@ -73,7 +73,7 @@ app.get('/users/:user', async (req, res) => {
   user ? res.json(user) : res.status(404).json({ error: 'user not found'})
 })
 
-app.put('/tutorial/new', auth.authMiddleware, async (req, res) => {
+app.put('/tutorial/new', auth.middleware('authenticated'), async (req, res) => {
   let tutorial = await Tutorials.new(req.body, req.user)
 
   res.json(tutorial)
