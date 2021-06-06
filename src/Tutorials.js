@@ -19,7 +19,7 @@ Tutorials.get = async function(id) {
 }
 
 Tutorials.new = async function(body, author) {
-    let allTutorials = await tutorials.list()
+    let allTutorials = await tutorials.find()
     let tutorial = {
         id: (allTutorials.length + 1).toString(),
         author,
