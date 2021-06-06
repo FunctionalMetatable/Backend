@@ -22,3 +22,22 @@ npm run dev
 
 npm start
 ```
+
+yarn:
+
+```bash
+
+git clone https://github.com/FlagClicked/Backend
+
+cd Backend
+
+yarn install
+
+# run with live reload
+
+yarn dev
+
+# start server for production
+
+yarn start
+```
