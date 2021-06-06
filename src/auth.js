@@ -72,18 +72,20 @@ Auth.getCurrentUserCount = async function() {
   return (await users.find()).length
 }
 
-Auth.authMiddleware = async function(req, res, next) {
-  let sessionUser = await Auth.getSession(req.cookies.token)
 
-  if (!sessionUser) {
-    return res.status(403).json({ error: "Invalid Token" })
-  } else {
-    req.user = sessionUser
-
-    next()
+Auth.middleware = function(type) {
+  return async function(req, res, next) {
+    let sessionUser = await Auth.getSession(req.cookies.token)
+    
+    if ((sessionUser && sessionUser.admin && type == 'admin') || (sessionUser && type == 'authenticated')) {
+      req.user = sessionUser;
+      
+      next()
+    } else {
+      return res.status(403).json({ error: "Forbidden" })
+    }
   }
 }
-
 
 
 function escapeRegExp(string) {
