@@ -77,7 +77,7 @@ app.get('/users/:user', async (req, res) => {
 })
 
 app.put('/tutorial/new', auth.middleware('authenticated'), async (req, res) => {
-  let tutorial = await Tutorials.new(req.body, req.user)
+  let tutorial = await Tutorials.new(req.body.body, req.user)
 
   res.json(tutorial)
 })
