@@ -17,7 +17,8 @@ const backendURL = process.env.BACKEND_URL || "hly3v.sse.codesandbox.io"
 
 const app = express();
 
-app.use(cookieParser())
+app.use(cookieParser());
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.json({ uptime: ((new Date()).getTime() - start ) / 1000});
@@ -69,7 +70,7 @@ app.get('/auth/delete', auth.middleware('authenticated'), async (req, res) => {
 })
 
 app.get('/users/:user', async (req, res) => {
-  let user = await auth.getUser(req.params.user.replace('*', '$1'))
+  let user = await auth.getUser(req.params.user.replace(/\*/g, '$1'))
   
   user ? res.json(user) : res.status(404).json({ error: 'user not found'})
 })
@@ -80,13 +81,37 @@ app.put('/tutorial/new', auth.middleware('authenticated'), async (req, res) => {
   res.json(tutorial)
 })
 
+app.get('/tutorial/featured', async (req, res) => {
+  let tutorial = await Tutorials.raw.findOne({
+    featured: true
+  })
+  
+  tutorial ? res.json(tutorial) : res.status(404).json({ error: 'cannot find tutorial'})
+})
+
+app.put('/tutorial/featured', auth.middleware('admin'), async (req, res) => {
+  // Remove the last featured tutorial if found
+  let tutorial = await Tutorials.raw.findOne({
+    featured: true
+  })
+  
+  if (tutorial) {
+    await Tutorials.raw.update( { id: tutorial.id }, { $set: { featured: false } })
+  }
+  
+  await Tutorials.raw.update( { id: req.body.id }, { $set: { featured: true } });
+  
+  return res.json({ ok: 'succesfully featured tutorial' })
+})
+
 app.get('/tutorial/:id', async (req, res) => {
   let tutorial = await Tutorials.get(req.params.id)
   tutorial ? res.json(tutorial) : res.status(404).json({ error: 'tutorial not found'})
 })
 
+
 app.use((req, res, next) => {
-  res.json({ code: "NotFound", error: `${req.path} is not a valid API endpoint`})
+  res.status(404).json({ code: "NotFound", error: `${req.path} is not a valid API endpoint`})
 })
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
