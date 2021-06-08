@@ -4,13 +4,15 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "start": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js"
   },
   "dependencies": {
     "cookie-parser": "^1.4.5",
+    "dotenv": "^10.0.0",
     "express": "4.17.1",
     "monk": "^7.3.4",
-    "node-fetch": "2.6.1"
+    "node-fetch": "^2.6.1"
   },
   "devDependencies": {
     "nodemon": "1.18.4"
