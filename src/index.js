@@ -107,7 +107,23 @@ app.put('/tutorial/featured', auth.middleware('admin'), async (req, res) => {
 
 app.get('/tutorial/:id', async (req, res) => {
   let tutorial = await Tutorials.get(req.params.id)
-  tutorial ? res.json(tutorial) : res.status(404).json({ error: 'tutorial not found'})
+  var user
+  if (req.cookies.token) {
+    user = await auth.getSession(req.cookies.token)
+  }
+  if (!tutorial || (tutorial && !tutorial.meta.visibillity && user.username !== tutorial.author.username)) return res.status(404).json({ error: 'tutorial not found'})
+  res.json(tutorial)
+})
+
+app.put('/tutorial/:id/show', auth.middleware('authenticated'), async (req, res) => {
+  let tutorial = await Tutorials.get(req.params.id)
+  
+  if (req.user.admin || req.user.username == tutorial.meta.created.user) {
+    await Tutorials.setVisibillity(req.params.id, req.user.username, req.body.setVisibillity || false)
+    
+    return true
+  } else res.status(403).json({ error: "Forbidden" })
+  
 })
 
 
